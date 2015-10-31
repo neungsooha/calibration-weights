@@ -1,0 +1,66 @@
+# Use simulated data 
+# clean version
+# we use primarily the sampling package for analysis
+
+rm(list=ls())
+
+library(sampling)
+
+sample=read.csv("..\\Dropbox\\Kott_Liao_Ha\\data\\sample.csv",
+	header=T)
+names(sample)=tolower(names(sample))
+dim(sample)
+
+
+sample_r=sample[sample$s1==1,]
+
+
+nsf02=read.csv('..\\Dropbox\\Kott_Liao_Ha\\nsf02.csv', header=T)
+names(nsf02)=tolower(names(nsf02))
+
+
+
+tot.nsf02=with(nsf02, c('(Intercept)'=sum(adj_wt), 'yotmthlp'=sum(yotmthlp*adj_wt),
+	'white'=sum(white*adj_wt), 'male'=sum(male*adj_wt), 
+	'young'=sum(young*adj_wt)))
+
+
+# so the total from the nsf02 is different than total from nsf01
+
+
+Xs=with(sample_r, cbind(rep(1, dim(sample_r)[1]), yotmthlp, white, 
+	male, young))
+
+
+d=sample_r$adj_wt
+
+sample.g1=calib(Xs, d=d, tot.nsf02, method='linear')
+w_ik=d*sample.g1
+
+w_ik1=rep(0, dim(sample)[1])
+
+ind=which(sample$s1==1)
+w_ik1[ind]=w_ik
+
+
+
+DL_method1=read.csv("..\\Dropbox\\Kott_Liao_Ha\\data\\sample with final weights from method 1.csv",
+                    header=T)
+
+cbind(w_ik1, DL_method1$f_wt1)[1:10,]
+
+sample_method1.ver2=cbind.data.frame(sample, 'f_wt'=w_ik1 )
+
+
+write.csv(sample_method1.ver2, 
+          '..\\Dropbox\\Kott_Liao_Ha\\data\\sample_method1.ver2.csv',
+          row.names=F)
+
+
+
+
+
+
+
+
+#
