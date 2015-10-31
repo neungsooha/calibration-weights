@@ -1,0 +1,109 @@
+# let's do Kott and Liao method
+# we will use the sampling package(), but we would also need 
+# the survey package() to do the weighted regression
+
+rm(list=ls())
+
+library(sampling)
+library(survey)
+
+sample=read.csv("..\\Dropbox\\Kott_Liao_Ha\\data\\sample.csv",
+	header=T)
+names(sample)=tolower(names(sample))
+
+# now, population
+#################################################################
+
+nsf02=read.csv('..\\Dropbox\\Kott_Liao_Ha\\nsf02.csv', header=T)
+names(nsf02)=tolower(names(nsf02))
+
+# Dan's result
+DL_method4=read.csv("..\\Dropbox\\Kott_Liao_Ha\\data\\sample with final weights from method 4.csv",
+	header=T)
+names(DL_method4)=tolower(names(DL_method4))
+ 
+ind=which(sample$s1==1) 
+# sample_r = sample who responded
+sample_r=sample[ind,]
+
+adj_wt=sample_r$adj_wt
+
+w1=sample$adj_wt
+
+###############################################################
+# we need the following steps in a loop
+
+epsilon=0.000001; Max_diff_w=1000000
+number=0
+
+
+while(Max_diff_w>epsilon){
+sam.dsgn=svydesign(id=~id, weights=~w1[ind], data=sample_r)
+
+svy.lm=svyglm(smhvst~yotmthlp + white + young + male, sam.dsgn)
+
+z_hat=as.numeric(predict(svy.lm, newdata=sample))
+
+
+
+tot.nsf02=with(nsf02, 
+               c('(Intercept)'=sum(adj_wt), sum(sample$adj_wt*z_hat)))
+
+
+Xs=cbind(rep(1, dim(sample_r)[1]),  (z_hat[ind]))
+
+Zs=cbind(rep(1, dim(sample_r)[1]), sample_r$smhvst)
+
+adj_factor=rep(0, dim(sample)[1])
+adj_factor[ind]=gencalib(Xs, Zs, d=adj_wt, tot.nsf02, method='logit',bounds=c(low=1,upp=10000000),
+                         max_iter=500,C=2)
+
+
+wtfinal=sample$adj_wt*adj_factor
+
+w0=w1;
+e_xg=adj_factor-1;
+w1=sample$adj_wt*e_xg;
+
+diff_w=abs(w1-w0);
+Max_diff_w=max(diff_w);Max_diff_w
+
+number=number+1
+x=list('iteration'=number, 'max_diff'=Max_diff_w, 'w1'=w1, 'wtfinal'=wtfinal)
+print(x)
+}
+
+
+
+sample_method4=cbind.data.frame(sample, 'f_wt4'=x$wtfinal, 'z_hat'=z_hat )
+
+write.csv(sample_method4, 
+          '..\\Dropbox\\Kott_Liao_Ha\\data\\sample_method4.ver2.csv',
+          row.names=F)
+
+
+
+
+
+
+
+
+
+
+
+#
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#
