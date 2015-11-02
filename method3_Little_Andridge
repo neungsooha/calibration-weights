@@ -6,10 +6,9 @@ rm(list=ls())
 
 library(sampling)
 library(survey)
+library(curl)
 
-
-sample=read.csv("..\\Dropbox\\Kott_Liao_Ha\\data\\sample.csv",
-	header=T)
+sample <- read.csv( curl('https://raw.githubusercontent.com/neungsooha/datafile/master/sample.csv') )
 names(sample)=tolower(names(sample))
 
 # sample_r = sample who responded
@@ -18,7 +17,7 @@ sample_r=sample[sample$s1==1,]
 
 # need to get the total 
 
-nsf02=read.csv('..\\Dropbox\\Kott_Liao_Ha\\nsf02.csv', header=T)
+nsf02=read.csv( curl("https://raw.githubusercontent.com/neungsooha/datafile/master/nsf02.csv"))
 names(nsf02)=tolower(names(nsf02))
 
 
@@ -31,15 +30,6 @@ z_hat=predict(lm1, newdata=sample)
 
 tot.nsf02=with(nsf02, 
                c('(Intercept)'=sum(adj_wt), sum(sample$adj_wt*z_hat)))
-
-
-# testing if I need to do the sample with 
-#lm2=lm(smhvst~yotmthlp + white + young + male, sample_r)
-
-#z_hat2=predict(lm2)
-
-
-#z_hat.1=z_hat[sample$s1==1]
 
 
 
@@ -67,22 +57,21 @@ w_ik3.2=rep(0, dim(sample)[1])
 ind=which(sample$s1==1)
 w_ik3.2[ind]=w_ik.2
 
+# sudaan result
+sud_method3=read.csv( curl("https://raw.githubusercontent.com/neungsooha/datafile/master/sample%20with%20final%20weights%20from%20method%203.csv"))
 
-DL_method3=read.csv("..\\Dropbox\\Kott_Liao_Ha\\data\\sample with final weights from method 3.csv",
-	header=T)
-
-cbind(DL_method3$f_wt3, w_ik3.2)[1:10,]
+# compare with the sudaan result
+cbind(sud_method3$f_wt3, w_ik3.2)[1:10,]
 # they are very close
 
-cbind(DL_method3$Z_HAT, z_hat)[1:10,]
-
-
+# compare the z's
+cbind(sud_method3$Z_HAT, z_hat)[1:10,]
 
 
 sample_method3=cbind.data.frame(sample, 'f_wt3'=w_ik3, 'z_hat'=z_hat )
 
 write.csv(sample_method3, 
-	'..\\Dropbox\\Kott_Liao_Ha\\data\\sample_method3.ver2.csv',
+	'your_local_file',
 	row.names=F)
 
 
