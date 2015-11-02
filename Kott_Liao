@@ -1,26 +1,26 @@
-# let's do Kott and Liao method
+# let's do method 4
 # we will use the sampling package(), but we would also need 
 # the survey package() to do the weighted regression
+
 
 rm(list=ls())
 
 library(sampling)
 library(survey)
+library(curl)
 
-sample=read.csv("..\\Dropbox\\Kott_Liao_Ha\\data\\sample.csv",
-	header=T)
+sample <- read.csv( curl('https://raw.githubusercontent.com/neungsooha/datafile/master/sample.csv') )
 names(sample)=tolower(names(sample))
 
 # now, population
 #################################################################
 
-nsf02=read.csv('..\\Dropbox\\Kott_Liao_Ha\\nsf02.csv', header=T)
+nsf02=read.csv( curl("https://raw.githubusercontent.com/neungsooha/datafile/master/nsf02.csv"))
 names(nsf02)=tolower(names(nsf02))
 
-# Dan's result
-DL_method4=read.csv("..\\Dropbox\\Kott_Liao_Ha\\data\\sample with final weights from method 4.csv",
-	header=T)
-names(DL_method4)=tolower(names(DL_method4))
+# sudaan result
+sud_method4=read.csv( curl("https://raw.githubusercontent.com/neungsooha/datafile/master/sample%20with%20final%20weights%20from%20method%204.csv"))
+names(sud_method4)=tolower(names(sud_method4))
  
 ind=which(sample$s1==1) 
 # sample_r = sample who responded
@@ -70,16 +70,24 @@ Max_diff_w=max(diff_w);Max_diff_w
 
 number=number+1
 x=list('iteration'=number, 'max_diff'=Max_diff_w, 'w1'=w1, 'wtfinal'=wtfinal)
-print(x)
+#print(x)
 }
 
+# compare
+cbind(x$wtfinal, sud_method4$f_wt4)[1:10,]
+# very similar
 
 
 sample_method4=cbind.data.frame(sample, 'f_wt4'=x$wtfinal, 'z_hat'=z_hat )
 
 write.csv(sample_method4, 
-          '..\\Dropbox\\Kott_Liao_Ha\\data\\sample_method4.ver2.csv',
+          'your_local_file',
           row.names=F)
+
+
+
+
+
 
 
 
